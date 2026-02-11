@@ -10,12 +10,12 @@ Dieses Repository dient dazu, Dokumentation automatisiert aus Bausteinen zu erst
 
 **AUTODOC** ermöglicht einen effizienten Workflow für die Erstellung mehrsprachiger, professioneller Dokumentation:
 
-```
+```bash
 docs/recipes/*.md → build/*.md → Übersetzung → HTML/PDF
 ```
 
 > [!NOTE]
-> MD-Dateien sind optimal für Embeddings. Man kann die MD-Dateien einer Sprache in einen Vector-Store laden, und die KI kann sie z.B. für ein Assistenz-System (wie **JoKnow**) verwenden. Dazu reicht EINE Sprache, da die KI in jeder Sprache antworten kann.
+> MD-Dateien sind optimal für Embeddings. Man kann die MD-Dateien einer Sprache in einen Vector-Store laden, und die KI kann sie z.B. für ein Assistenz-System (wie [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html) ) verwenden. Dazu reicht EINE Sprache, da die KI in jeder Sprache antworten kann.
 
 ---
 
@@ -44,6 +44,11 @@ php tools/build.php docs/recipes/produkt-a.md build/test.md
 **Eingabe:** Recipe-Datei mit Include-Anweisungen  
 **Ausgabe:** Vollständige MD-Datei in `build/`
 
+> [TIP!]
+> Die Deutschen MD-Dateien sind optimales Material für Embedding in Vector-Stores,
+> ein paar Test-MD sind in [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html)
+
+
 ---
 
 ### 2️⃣ Automatisiert übersetzen (via OpenAI)
@@ -64,14 +69,33 @@ php tools/translate_md.php build/test.md build/test.en.md
 
 Konvertiere Markdown in professionelle PDFs mit **Pandoc**.
 
-#### 🔹 Mit LuaLaTeX (empfohlen für Emojis)
+#### 🔹 Mit LuaLaTeX (empfohlen für (farbige) Emojis)
+
+#### 📝 Frontmatter für farbige Emojis
+
+Füge im Markdown-Header einen Fallback-Font für Emojis hinzu:
+
+```yaml
+---
+mainfont: "Times New Roman"
+mainfontfallback:
+    - "Segoe UI Emoji:mode=harf"
+title: Mein Produkt 🚀
+---
+```
+
+**Hinweis:** Hier für Windows. Für Linux können evtl. auch andere Emoji-Fonts verwendet werden (z.B. `Noto Color Emoji`).
+
+**Font-Liste anzeigen:**
+```bash
+fc-list
+```
+
+
 
 ```bash
-pandoc build/test.md -f gfm+alerts \
-  --lua-filter=flavoured/github-alerts.lua \
-  --pdf-engine=lualatex \
-  -H flavoured/preamble.tex \
-  -o build/test.pdf
+pandoc build/test.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex 
+  -H flavoured/preamble.tex  -o build/test.pdf
 ```
 
 **Eigenschaften:**
@@ -79,18 +103,18 @@ pandoc build/test.md -f gfm+alerts \
 - ✅ **GitHub-Alerts** als farbige Boxen
 - ⏱️ Langsamer als XeLaTeX
 
-#### 🔹 Mit XeLaTeX (schneller, ohne Emoji-Farbe)
+#### 🔹 Mit XeLaTeX (schneller, ohne farbige Emoji)
 
 ```bash
 pandoc build/test.md -f gfm --pdf-engine=xelatex -o build/test.pdf
 ```
 
-**Emojis in Monochrom:**
+**Option: in XeLaTeX Emojis 'light' in Monochrom:**
 ```bash
 pandoc build/test.md --pdf-engine=xelatex -V mainfont="Segoe UI Emoji" -o build/test.pdf
 ```
 
-#### 📝 Frontmatter für Emojis
+#### 📝 Frontmatter für farbige Emojis
 
 Füge im Markdown-Header einen Fallback-Font hinzu:
 
@@ -115,14 +139,11 @@ fc-list
 Erstelle standalone HTML-Dateien mit CSS-Styling:
 
 ```bash
-pandoc build/test.md -f gfm+alerts \
-  --css=github-alerts.css \
-  --standalone \
-  -o build/test.html
+pandoc build/test.md -f gfm+alerts --css=flavoured.css --standalone  -o build/test.html
 ```
 
 > [!TIP]
-> Kopiere `flavoured/github-alerts.css` nach `build/` vor dem ersten Aufruf!
+> Kopiere `flavoured/flavoured.css` nach `build/` vor dem ersten Aufruf!
 
 **Eigenschaften:**
 - ✅ Schnelle Konvertierung
@@ -157,7 +178,7 @@ pandoc build/test.md -f gfm+alerts \
 - **HTML:** Native Unterstützung seit Pandoc v3
 - **PDF:** Lua-Filter konvertiert Alerts → LaTeX `tcolorbox`
 - **Styling:** 
-  - HTML: `github-alerts.css`
+  - HTML: `flavoured.css`
   - PDF: `preamble.tex` (tcolorbox-Definitionen)
 
 ---
@@ -178,6 +199,7 @@ pandoc build/test.md -f gfm+alerts \
 - [Emoji-Liste (Unicode)](https://github.com/Fantantonio/Emoji-List-Unicode)
 - [Pandoc Dokumentation](https://pandoc.org/)
 - [GitHub Alerts Syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts)
+- [JoKnow auf GitHub](https://github.com/joembedded/AiPlayground)
 
 ---
 
