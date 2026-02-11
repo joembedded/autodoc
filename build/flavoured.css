@@ -1,0 +1,84 @@
+/* GitHub Alerts Styles */
+.alert,
+.note,
+.tip,
+.important,
+.warning,
+.caution {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid;
+  border-radius: 4px;
+}
+
+.alert::before {
+  content: attr(data-title);
+  font-weight: bold;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+/* Note stylen */
+.alert-note,
+.note {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.note .title {
+  font-weight: bold;
+  color: #1e40af;
+}
+
+/* Tip stylen */
+.alert-tip,
+.tip {
+  background-color: #d1fae5;
+  border-color: #10b981;
+  color: #065f46;
+}
+
+.tip .title {
+  font-weight: bold;
+  color: #065f46;
+}
+
+/* Important stylen */
+.alert-important,
+.important {
+  background-color: #e9d5ff;
+  border-color: #a855f7;
+  color: #6b21a8;
+}
+
+.important .title {
+  font-weight: bold;
+  color: #6b21a8;
+}
+
+/* Warning stylen */
+.alert-warning,
+.warning {
+  background-color: #fed7aa;
+  border-color: #f97316;
+  color: #9a3412;
+}
+
+.warning .title {
+  font-weight: bold;
+  color: #9a3412;
+}
+
+/* Caution stylen */
+.alert-caution,
+.caution {
+  background-color: #fecaca;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.caution .title {
+  font-weight: bold;
+  color: #991b1b;
+}
