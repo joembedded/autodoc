@@ -1,136 +1,136 @@
 # AUTODOC 📚
 
-Ein automatisiertes Dokumentationssystem von **JoEmbedded**
+An automated documentation system by **JoEmbedded**
 
-Dieses Repository dient dazu, Dokumentation automatisiert aus Bausteinen zu erstellen – mit Unterstützung für **Emojis** und **GitHub-Alerts**. Die erstellten Markdown-Dateien können mit KI-Unterstützung übersetzt, kompaktiert oder anderweitig verarbeitet und in verschiedene Formate konvertiert werden.
+This repository is designed to automatically create documentation from modular building blocks – with support for **Emojis** and **GitHub-Alerts**. The created Markdown files can be translated, compacted, or otherwise processed with AI support and converted into various formats.
 
 ---
 
-## 🎯 Übersicht
+## 🎯 Overview
 
-**AUTODOC** ermöglicht einen effizienten Workflow für die Erstellung mehrsprachiger, professioneller Dokumentation unter optionalem KI-Einsatz. **AUTODOC** kann aber auch für vieles andere verwendet werden: Zusammenfassungen, Verzierungen, ...,
-da es sich als Kommandozeilen-Tool leicht integrieren lässt.
+**AUTODOC** enables an efficient workflow for creating multilingual, professional documentation with optional AI integration. **AUTODOC** can also be used for many other purposes: summaries, embellishments, ...,
+as it is easily integrated as a command-line tool.
 
-Workflow z.B.:
+Example workflow:
 ```bash
-docs/recipes/*.md → build/*.md → KI-Verarbeitung → HTML/PDF
+docs/recipes/*.md → build/*.md → AI-Processing → HTML/PDF
 ```
 
 > [!NOTE]
-> MD-Dateien sind optimal für Embeddings. Man kann die MD-Dateien einer Sprache in einen Vector-Store laden, und die KI kann sie z.B. für ein Assistenz-System (wie [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html) ) verwenden. Dazu reicht EINE Sprache, da die KI in nahezu jeder (anderen) Sprache antworten kann.
+> MD files are optimal for embeddings. You can load the MD files of one language into a vector store, and the AI can use them for assistant systems (like [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html)). One language is sufficient, as the AI can respond in almost any (other) language.
 
-Als Hilfe sind einige der in der Doku erwähnten Dateien im Output belassen.
-
----
-
-## 📁 Projektstruktur
-
-| Verzeichnis | Beschreibung |
-|-------------|--------------|
-| `docs/` | Quell-Dateien (Blöcke und Rezepte) |
-| `build/` | Gesamter generierter Output (MD, HTML, PDF) |
-| `flavoured/` | Hilfs-Dateien (GitHub-Flavored-Markdown, ...) und Tools für Konvertierung |
-| `tools/` | PHP-Scripts für Build und KI-Verarbeitung |
-| `secret/` | API-Keys (z.B. für OpenAI) |
+As a help, some of the files mentioned in the documentation are left in the output.
 
 ---
 
-## 🔧 Workflow im Detail
+## 📁 Project Structure
 
-### 1️⃣ Markdown zusammensetzen
+| Directory | Description |
+|-----------|-------------|
+| `docs/` | Source files (blocks and recipes) |
+| `build/` | All generated output (MD, HTML, PDF) |
+| `flavoured/` | Helper files (GitHub-Flavored-Markdown, ...) and conversion tools |
+| `tools/` | PHP scripts for build and AI processing |
+| `secret/` | API keys (e.g., for OpenAI) |
 
-Erstelle eine zusammengesetzte Markdown-Datei aus einzelnen Bausteinen,
-die Quellen sind auf Deutsch;
+---
+
+## 🔧 Detailed Workflow
+
+### 1️⃣ Assemble Markdown
+
+Create a composite Markdown file from individual building blocks,
+the sources are in German:
 
 ```bash
 php tools/build.php docs/recipes/produkt-a.md build/produkt_a_de.md
 ```
 
-**Eingabe:** Recipe-Datei mit Include-Anweisungen  
-**Ausgabe:** Vollständige MD-Datei in `build/`
+**Input:** Recipe file with include directives  
+**Output:** Complete MD file in `build/`
 
 > [!TIP]
-> Die Deutschen MD-/TXT-Dateien sind optimales Material für Embedding in Vector-Stores,
-> ein paar Test-MD wurden bereits früher in [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html) verbaut. Zum Testen, wie gut der Vector-Store damit klarkommt: Top!
+> MD/TXT files are optimal material for embedding in vector stores.
+> A few test MDs were already previously built into [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html). Since the KI can answer in many different languages, only one version in one langugae is sufficient. For testing how well the vector store handles them: Top!
 
 
 ---
 
-### 2️⃣ KI-gestützte Dokumentverarbeitung (via OpenAI)
+### 2️⃣ AI-Supported Document Processing (via OpenAI)
 
-**mdtool.php** ist ein flexibles Tool zur KI-basierten Verarbeitung von Markdown-Dateien, z. B. Übersetzen, Kompaktieren, Zusammenfassung einfügen.
+**mdtool.php** is a flexible tool for AI-based processing of Markdown files, e.g., translating, compacting, adding summaries.
 
 #### 📖 Syntax
 
 ```bash
-php tools/mdtool.php <inputfile.md> [optionen] [outputfile.md]
+php tools/mdtool.php <inputfile.md> [options] [outputfile.md]
 ```
 
-**Parameter:**
-- `inputfile.md` - Eingabedatei (mandatory)
-- `outputfile.md` - Ausgabedatei (optional, sonst stdout)
+**Parameters:**
+- `inputfile.md` - Input file (mandatory)
+- `outputfile.md` - Output file (optional, otherwise stdout)
 
-**Optionen** (Details siehe PHP-Quellcode):
-- `-c <datei>` - Instructions aus Datei laden. Sinnvoll z. B. bei professionellen Übersetzungen, wo z. B. Formatierungen beachtet werden müssen. Als Beispiel ist hier `tools/translate_de_en.txt`
-- `-i "<text>"` - Instructions direkt angeben. Sinnvoll für Kleinigkeiten, z. B. Rechtschreibprüfung bei reinen Textblöcken oder Erstellen einer Zusammenfassung
-- `-m <modell>` - Model überschreiben (default: `gpt-4.1-mini`)
+**Options** (details see PHP source code):
+- `-c <file>` - Load instructions from file. Useful e.g., for professional translations where e.g., formatting must be considered. Example here: `tools/translate_de_en.txt`
+- `-i "<text>"` - Specify instructions directly. Useful for small tasks, e.g., spell checking for plain text blocks or creating a summary
+- `-m <model>` - Override model (default: `gpt-4.1-mini`)
 
-#### 📝 Beispiele
+#### 📝 Examples
 
-**Übersetzen (DE→EN):**
+**Translate (DE→EN):**
 ```bash
 php tools/mdtool.php build/produkt_a_de.md build/produkt_a_en.md -c tools/translate_de_en.txt
 ```
 
-**Kompaktieren:**
+**Compact:**
 ```bash
 php tools/mdtool.php build/test.md build/test_compact.md -i "Compact to small summary"
 ```
 
-**Direkte Ausgabe (stdout via > in Datei):**
+**Direct output (stdout via > to file):**
 ```bash
 php tools/mdtool.php build/test.md -i "Translate to English" > build/output.md
 ```
 
-**'Verzierte' Version mit Spoiler:**
+**'Embellished' version with spoiler:**
 ```bash
-php tools/mdtool.php docs/testtext.md build/testtext_verziert_spoiler.md -i "Füge am Anfang der Datei eine kurze Zusammenfassung als GitHub-Alert '> [!NOTE] >' ein, füge dann den Originaltext hintenan und verschöndere den gesamten Text mit Emojis"
+php tools/mdtool.php docs/testtext.md build/testtext_verziert_spoiler.md -i "Add a brief summary as GitHub-Alert '> [!NOTE] >' at the beginning of the file, then add the original text afterward and beautify the entire text with Emojis"
 ```
 
-**Anderes Model verwenden:**
+**Use different model:**
 ```bash
 php tools/mdtool.php build/test.md build/test.en.md -m gpt-4.1-nano -c tools/translate_de_en.txt
 ```
 
-**Datei kopieren (ohne KI-Verarbeitung):**
+**Copy file (without AI processing):**
 ```bash
 php tools/mdtool.php build/test.md build/test_copy.md
 ```
 
 > [!IMPORTANT]
-> KI-Verarbeitung benötigt einen **OpenAI API-Key** in `secret/keys.inc.php`.  
-> Ohne Instructions (`-c` oder `-i`) wird die Datei nur kopiert (kein API-Call).
+> AI processing requires an **OpenAI API key** in `secret/keys.inc.php`.  
+> Without instructions (`-c` or `-i`), the file is only copied (no API call).
 
 > [!TIP]
-> YAML-Frontmatter bleibt immer unverändert – nur der Dokumenten-Body wird verarbeitet.
+> YAML frontmatter always remains unchanged – only the document body is processed.
 
 ---
 
-### 3️⃣ PDF erzeugen
+### 3️⃣ Generate PDF
 
-Konvertiere Markdown in professionelle PDFs mit **Pandoc**.
-Üblicherweise verwendet LaTeX bereits schöne Serifen-Schriftarten, was bei HTML weniger verbreitet ist, da dort eher serifenlose Schriftarten vorherrschen. Dazu kann ggf. eine eigene YAML-Datei die Pandoc-Voreinstellungen ändern. Diese können im Frontmatter oder in einer separaten Datei (Muster in `flavoured/commonpdf.yml`) hinterlegt werden.
+Convert Markdown to professional PDFs with **Pandoc**.
+LaTeX typically already uses beautiful serif fonts, which is less common in HTML, where sans-serif fonts predominate. If needed, a custom YAML file can change Pandoc's default settings. These can be stored in the frontmatter or in a separate file (template in `flavoured/commonpdf.yml`).
 
-Es gibt mehrere LaTeX-Engines für Pandoc ("LuaLaTeX", "XeLaTeX", ...) und nicht jede kann auf jedem System alles. Im Zweifelsfall hilft leider nur Probieren... Die Engine wird mit `--pdf-engine=lualatex` oder `--pdf-engine=xelatex` gesetzt.
+There are several LaTeX engines for Pandoc ("LuaLaTeX", "XeLaTeX", ...) and not every one can do everything on every system. In case of doubt, unfortunately, only trial and error helps... The engine is set with `--pdf-engine=lualatex` or `--pdf-engine=xelatex`.
 
-**Hinweis:** Hier mein Setup für Windows. Für Linux können evtl. auch andere Emoji-Fonts verwendet werden (z.B. `Noto Color Emoji`, als Mainfont z.B. auch "Helvetica", "Liberation Sans", "Comic Sans MS", ...). Fehlende Fonts werden aufgelistet. **Pandoc** ist bei PDF meist recht langsam (dauert oft mehrere Sekunden, bei HTML dagegen meist viel schneller).
+**Note:** This is my setup for Windows. For Linux, other emoji fonts can also be used (e.g., `Noto Color Emoji`, as mainfont e.g., "Helvetica", "Liberation Sans", "Comic Sans MS", ...). Missing fonts will be listed. **Pandoc** is usually quite slow for PDFs (often takes several seconds, whereas HTML is usually much faster).
 
 
-#### 🔹 Mit LuaLaTeX (empfohlen für (farbige) Emojis)
+#### 🔹 With LuaLaTeX (recommended for (colored) Emojis)
 
-#### 📝 Frontmatter für farbige Emojis
+#### 📝 Frontmatter for colored Emojis
 
-Füge einen Fallback-Font für Emojis hinzu (oder im MetaFile):
+Add a fallback font for emojis (or in the metafile):
 
 ```yaml
 mainfont: "Arial"
@@ -138,93 +138,96 @@ mainfontfallback:
     - "Segoe UI Emoji:mode=harf"
 ```
 
-**Font-Liste anzeigen:**
+**Display font list:**
 ```bash
 fc-list
 ```
 
-Direkt:
+Direct:
 ```bash
 pandoc build/test.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex 
   -H flavoured/preamble.tex  -o build/test.pdf
 ```
 
-Mit separater Meta-Datei z.B.:
+With separate metadata file (2 examples):
 ```bash
 pandoc build/produkt_a_de.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex --metadata-file=flavoured/commonpdf.yml -H flavoured/preamble.tex  -o build/produkt_a_de.pdf
 ```
 
+```bash
+pandoc build/testtext_verziert_spoiler.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex --metadata-file=flavoured/commonpdf.yml -H flavoured/preamble.tex  -o build/testtext_verziert_spoiler.pdf
+```
 
-### 4️⃣ HTML erzeugen
+### 4️⃣ Generate HTML
 
-Erstelle standalone HTML-Dateien mit CSS-Styling:
+Create standalone HTML files with CSS styling:
 
 ```bash
 pandoc build/test.md -f gfm+alerts --css=flavoured.css --standalone  -o build/test.html
 ```
 
 > [!TIP]
-> Kopiere `flavoured/flavoured.css` nach `build/` vor dem ersten Aufruf!
-> Im Verzeichnis `flavoured/` gibt es zwei CSS-Dateien:
-> - **`flavoured_medium.css`** – sofort einsatzbereit mit modernem Design
-> - **`flavoured_light.css`** – gute Ausgangsbasis für eigene Anpassungen
+> Copy `flavoured/flavoured.css` to `build/` before the first call!
+> In the `flavoured/` directory, there are two CSS files:
+> - **`flavoured_medium.css`** – ready to use with modern design
+> - **`flavoured_light.css`** – good starting point for your own customizations
 > 
-> Das CSS ist bereits optisch optimiert für moderne, responsive Darstellung auf Desktop und Mobile.
-> `pandoc` selbst bietet wenig Optionen fürs HTML. Daher ist die `.css` gut geeignet.
+> The CSS is already visually optimized for modern, responsive display on desktop and mobile.
+> `pandoc` itself offers few options for HTML. Therefore, the `.css` is well suited.
 
 
-**Eigenschaften des HTML-Outputs:**
-- ✅ Schnelle Konvertierung
-- ✅ Native Alert-Unterstützung (kein Lua-Filter nötig)
-- ✅ Responsive Design
+**Properties of HTML output:**
+- ✅ Fast conversion
+- ✅ Native alert support (no Lua filter needed)
+- ✅ Responsive design
 
 ---
 
-## Über die 🎨 GitHub-Alerts
+## About 🎨 GitHub-Alerts
 
-**AUTODOC** unterstützt GitHub Flavored Markdown mit farbigen Alert-Boxen:
+**AUTODOC** supports GitHub Flavored Markdown with colored alert boxes:
 
 ```markdown
 > [!NOTE]
-> Informative Hinweise in Blau
+> Informative notes in blue
 
 > [!TIP]
-> Praktische Tipps in Grün
+> Practical tips in green
 
 > [!IMPORTANT]
-> Wichtige Infos in Lila
+> Important information in purple
 
 > [!WARNING]
-> Warnungen in Orange
+> Warnings in orange
 
 > [!CAUTION]
-> Kritische Hinweise in Rot
+> Critical notices in red
 ```
 
 ---
 
-## 📌 Nützliche Links
+## 📌 Useful Links
 
-- [Emoji-Liste (Unicode)](https://github.com/Fantantonio/Emoji-List-Unicode)
-- [Pandoc Dokumentation](https://pandoc.org/)
+- [Emoji List (Unicode)](https://github.com/Fantantonio/Emoji-List-Unicode)
+- [Pandoc Documentation](https://pandoc.org/)
 - [GitHub Alerts Syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts)
-- [JoKnow auf GitHub](https://github.com/joembedded/AiPlayground)
+- [JoKnow on GitHub](https://github.com/joembedded/AiPlayground)
 
 ---
 
-## 💡 Tipps
+## 💡 Tips
 
-- **Schneller Workflow:** HTML für Vorschau, PDF für finale Version
-- **Font-Probleme:** `fc-list` zeigt verfügbare Schriften
-- **Große Dokumente:** PDF-Erstellung kann mehrere Sekunden dauern
-- **Embeddings:** MD-Dateien eignen sich perfekt für KI-Assistenten
+- **Fast workflow:** HTML for preview, PDF for final version
+- **Font problems:** `fc-list` shows available fonts
+- **Large documents:** PDF creation can take several seconds
+- **Embeddings:** MD files are perfect for AI assistants
 
 ---
 
 ## 🤝 Support
 
-Bei Fragen zu GitHub-Alerts, Pandoc-Filtern, HTML oder CSS:
-> Frag **Claude Sonnet** – er kennt sich da sehr gut aus! 🤖
+For questions about GitHub-Alerts, Pandoc filters, HTML, or CSS:
+> Ask **Claude Sonnet** – he knows a lot about this! 🤖
 
 ---
 
