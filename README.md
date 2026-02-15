@@ -123,7 +123,7 @@ Konvertiere Markdown in professionelle PDFs mit **Pandoc**.
 
 Es gibt mehrere LaTeX-Engines für Pandoc ("LuaLaTeX", "XeLaTeX", ...) und nicht jede kann auf jedem System alles. Im Zweifelsfall hilft leider nur Probieren... Die Engine wird mit `--pdf-engine=lualatex` oder `--pdf-engine=xelatex` gesetzt.
 
-**Hinweis:** Hier mein Setup für Windows. Für Linux können evtl. auch andere Emoji-Fonts verwendet werden (z.B. `Noto Color Emoji`, als Mainfont z.B. auch "Helvetica", "Liberation Sans", ...). Fehlende Fonts werden aufgelistet. **Pandoc** ist bei PDF meist recht langsam (dauert oft mehrere Sekunden, bei HTML dagegen meist viel schneller).
+**Hinweis:** Hier mein Setup für Windows. Für Linux können evtl. auch andere Emoji-Fonts verwendet werden (z.B. `Noto Color Emoji`, als Mainfont z.B. auch "Helvetica", "Liberation Sans", "Comic Sans MS", ...). Fehlende Fonts werden aufgelistet. **Pandoc** ist bei PDF meist recht langsam (dauert oft mehrere Sekunden, bei HTML dagegen meist viel schneller).
 
 
 #### 🔹 Mit LuaLaTeX (empfohlen für (farbige) Emojis)
