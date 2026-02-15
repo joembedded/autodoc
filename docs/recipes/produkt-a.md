@@ -1,21 +1,15 @@
 ---
-title: DerTitelfür das 🚣 Produkt
-author: geschrieben von Jo
-product_name: TestProdukt 🧘
-heute: "Heute ist ein schöner Tag!  .     "
+title: Mein erstes Produkt
+author: JoEmbedded
+product_name: TestProdukt 'A'
+heute: "Sonntag im Winter"
 ---
 
+Dies ist ein Datenblatt zu: '**{{product_name}}**' 🧰
+Version: {{heute}}
 
-Fas Produkt: **{{product_name}}** 🤷
-Was ist heute: {{heute}}
+🥗 {{include: ../blocks/intro.md}}
 
-3 Fuchs: 🦊🦊🦊
+🍪 {{include: ../blocks/warranty.md}}
 
-Die Intro:
-{{include: ../blocks/intro.md}}
-
-
-Zur Garantie:
-{{include: ../blocks/warranty.md}}
-
-Das Ende!
+Viel Freude mit '**{{product_name}}**' 🌻
