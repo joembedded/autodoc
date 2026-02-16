@@ -74,6 +74,7 @@ php tools/mdtool.php <inputfile.md> [optionen] [outputfile.md]
 - `-c <datei>` - Instructions aus Datei laden. Sinnvoll z. B. bei professionellen Übersetzungen, wo z. B. Formatierungen beachtet werden müssen. Als Beispiel ist hier `tools/translate_de_en.txt`
 - `-i "<text>"` - Instructions direkt angeben. Sinnvoll für Kleinigkeiten, z. B. Rechtschreibprüfung bei reinen Textblöcken oder Erstellen einer Zusammenfassung
 - `-m <modell>` - Model überschreiben (default: `gpt-4.1-mini`)
+  (Note: `gpt-4.1-mini` is perfect for technical translations, `nano` is sometimes to relaxed, `gpt-5` normally oversized. For prompts: Ask **ChatGPT** )
 
 #### 📝 Beispiele
 
