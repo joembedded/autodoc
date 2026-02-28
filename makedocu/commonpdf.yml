@@ -1,4 +1,4 @@
-mainfont: "DejaVu Sans"
+mainfont: "Segoe UI"
 mainfontfallback:
     - "Segoe UI Emoji:mode=harf"
-fontsize: 12pt
+fontsize: 10pt

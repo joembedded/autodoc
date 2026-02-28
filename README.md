@@ -29,7 +29,8 @@ As a help, some of the files mentioned in the documentation are left in the outp
 |-----------|-------------|
 | `docs/` | Source files (blocks and recipes) |
 | `build/` | All generated output (MD, HTML, PDF) |
-| `flavoured/` | Helper files (GitHub-Flavored-Markdown, ...) and conversion tools |
+| `makedocu/` | Helper files (GitHub-Flavored-Markdown, ...) and conversion tools |
+| `flavours_css/` | CSS files (flavoured_light, flavoured_medium) for selection |
 | `tools/` | PHP scripts for build and AI processing |
 | `secret/` | API keys (e.g., for OpenAI) |
 
@@ -117,10 +118,37 @@ php tools/mdtool.php build/test.md build/test_copy.md
 
 ---
 
-### 3️⃣ Generate PDF
+### 3️⃣ Simplified Documentation Creation with docrun.bat
+
+For quick PDF and HTML creation, the `makedocu/` directory can simply be copied into a directory with an MD file and the **docrun.bat** tool can be called:
+
+```bash
+makedocu/docrun.bat MDFILENAME
+```
+
+**Parameters:**
+- `MDFILENAME` - Name of the MD file **without** `.md` extension
+
+**Output:**
+- `MDFILENAME.pdf` - PDF document
+- `MDFILENAME.html` - HTML document
+
+**CSS Selection:**
+The `flavoured.css` used can be selected from the variants in `flavours_css/`:
+- `flavoured_light/flavoured.css` - lightweight design
+- `flavoured_medium/flavoured.css` - balanced design (default)
+
+Simply copy the desired CSS file to `makedocu/flavoured.css`.
+
+> [!TIP]
+> This is the fastest way to create professional documentation – just call docrun.bat!
+
+---
+
+### 4️⃣ Generate PDF
 
 Convert Markdown to professional PDFs with **Pandoc**.
-LaTeX typically already uses beautiful serif fonts, which is less common in HTML, where sans-serif fonts predominate. If needed, a custom YAML file can change Pandoc's default settings. These can be stored in the frontmatter or in a separate file (template in `flavoured/commonpdf.yml`).
+LaTeX typically already uses beautiful serif fonts, which is less common in HTML, where sans-serif fonts predominate. If needed, a custom YAML file can change Pandoc's default settings. These can be stored in the frontmatter or in a separate file (template in `makedocu/commonpdf.yml`).
 
 There are several LaTeX engines for Pandoc ("LuaLaTeX", "XeLaTeX", ...) and not every one can do everything on every system. In case of doubt, unfortunately, only trial and error helps... The engine is set with `--pdf-engine=lualatex` or `--pdf-engine=xelatex`.
 
@@ -146,20 +174,20 @@ fc-list
 
 Direct:
 ```bash
-pandoc build/test.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex 
-  -H flavoured/preamble.tex  -o build/test.pdf
+pandoc build/test.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex 
+  -H makedocu/preamble.tex  -o build/test.pdf
 ```
 
 With separate metadata file (2 examples):
 ```bash
-pandoc build/produkt_a_de.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex --metadata-file=flavoured/commonpdf.yml -H flavoured/preamble.tex  -o build/produkt_a_de.pdf
+pandoc build/produkt_a_de.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex --metadata-file=makedocu/commonpdf.yml -H makedocu/preamble.tex  -o build/produkt_a_de.pdf
 ```
 
 ```bash
-pandoc build/testtext_verziert_spoiler.md -f gfm+alerts --lua-filter=flavoured/github-alerts.lua --pdf-engine=lualatex --metadata-file=flavoured/commonpdf.yml -H flavoured/preamble.tex  -o build/testtext_verziert_spoiler.pdf
+pandoc build/testtext_verziert_spoiler.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex --metadata-file=makedocu/commonpdf.yml -H makedocu/preamble.tex  -o build/testtext_verziert_spoiler.pdf
 ```
 
-### 4️⃣ Generate HTML
+### 5️⃣ Generate HTML
 
 Create standalone HTML files with CSS styling:
 
@@ -167,11 +195,17 @@ Create standalone HTML files with CSS styling:
 pandoc build/test.md -f gfm+alerts --css=flavoured.css --standalone  -o build/test.html
 ```
 
+Optionally (also) copy images:
+```
+Copy-Item -Recurse -Force img build/
+```
+
+
 > [!TIP]
-> Copy `flavoured/flavoured.css` to `build/` before the first call!
-> In the `flavoured/` directory, there are two CSS files:
-> - **`flavoured_medium.css`** – ready to use with modern design
-> - **`flavoured_light.css`** – good starting point for your own customizations
+> Copy the desired CSS file to `build/flavoured.css` before the first call!
+> In the `flavours_css/` directory, there are two CSS variants to choose from:
+> - **`flavoured_medium/flavoured.css`** – balanced, modern design (default)
+> - **`flavoured_light/flavoured.css`** – lightweight variant, good starting point for your own customizations
 > 
 > The CSS is already visually optimized for modern, responsive display on desktop and mobile.
 > `pandoc` itself offers few options for HTML. Therefore, the `.css` is well suited.
