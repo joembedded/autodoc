@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>T350_manual</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="flavoured.css" />
+</head>
+<body>
+<h1 id="osx-typ350-ads1220-universal-adc-sensor---user-manual">OSX
+Typ350 ADS1220 Universal-ADC Sensor - User Manual</h1>
+<ul>
+<li><strong>Device Type:</strong> Typ350</li>
+<li><strong>Chip:</strong> Texas Instruments ADS1220 (24-Bit Sigma-Delta
+ADC)</li>
+<li><strong>Interface:</strong> SDI-12 V1.3</li>
+<li><strong>Version:</strong> V0.1/28.02.2026/JoEm</li>
+<li><strong>Info:</strong> Documentation generated with <a
+href="https://github.com/joembedded/autodoc">AutoDoc</a></li>
+</ul>
+<hr />
+<p><img src="./OSX_ad4to20mA.png" alt="0350_ANALOG_4to20mA_PCB" /></p>
+<p><em>PCB V1.1 for 0/4-20 mA (other versions: PT100, bridge,
+...)</em></p>
+<h2 id="1-overview">1. Overview</h2>
+<p>The T350 ("OSX Typ350") is a highly precise, universal analog data
+acquisition node based on the ADS1220. It supports up to <strong>8
+physical measurement channels</strong> (operating modes), which are
+fixedly configured via the array <code>ad_physkan[]</code> in the
+firmware source.</p>
+<p><strong>Typical applications:</strong></p>
+<ul>
+<li>High-precision PT100 temperature measurement (–70 … +120 °C,
+accuracy &lt; 0.05 °C)</li>
+<li>0/4–20 mA current measurement</li>
+<li>Bridge sensors (load/pressure cells)</li>
+<li>(Solar) radiation sensors</li>
+<li>General differential and single-ended voltage measurement</li>
+</ul>
+<h3 id="hardware-connection-spi-signals">Hardware connection (SPI
+signals)</h3>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Pin</th>
+<th>Color (Cable)</th>
+<th>Direction at ADC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SCLK</td>
+<td>IX_SCL</td>
+<td>yellow</td>
+<td>IN</td>
+</tr>
+<tr>
+<td>DIN (MOSI)</td>
+<td>IX_SDA</td>
+<td>green</td>
+<td>IN</td>
+</tr>
+<tr>
+<td>DO / #DRDY</td>
+<td>IX_X0</td>
+<td>white</td>
+<td>OUT</td>
+</tr>
+<tr>
+<td>#DRDY</td>
+<td>IX_X1</td>
+<td>blue</td>
+<td>OUT</td>
+</tr>
+<tr>
+<td>#Vcc (Pwr)</td>
+<td>IX_X2</td>
+<td>–</td>
+<td>LOW = ON</td>
+</tr>
+</tbody>
+</table>
+<div class="note">
+<div class="title">
+<p>Note</p>
+</div>
+<p>The ADS1220 operates with #CS permanently pulled LOW (<strong>SPI
+Mode 1</strong>, CPOL=0, CPHA=1). After power off, IX_X2 pulls the SPI
+lines to GND via 2 × 15 kΩ resistors.</p>
+</div>
+<hr />
+<h2 id="2-physical-channels-ad_physkan">2. Physical Channels
+(<code>ad_physkan[]</code>)</h2>
+<p>The firmware knows <strong>8 physical channels</strong> (indices
+0–7). Each channel has a fixed configured operating mode
+(<code>typ</code>), ADS1220 register configuration, averaging, and
+unit.</p>
+<h3 id="21-operating-modes-typ">2.1 Operating Modes
+(<code>typ</code>)</h3>
+<table>
+<thead>
+<tr>
+<th><code>typ</code></th>
+<th>Constant</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>P_TYP_ITEMP</code></td>
+<td>Internal chip temperature of the ADS1220</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>P_TYP_PT100_A</code></td>
+<td>PT100 via 2 kΩ reference + IDAC 1 mA + polynomial linearization</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>P_TYP_STD</code></td>
+<td>Standard ADC (single-ended or differential), result in mV or
+counts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-channel-overview">2.2 Channel Overview</h3>
+<table>
+<thead>
+<tr>
+<th>Idx</th>
+<th>SDI-12 Cmd</th>
+<th>Type</th>
+<th>Configuration</th>
+<th>SPS</th>
+<th>Averaging</th>
+<th>Calibration</th>
+<th>Unit</th>
+<th>Measurement Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>M2</td>
+<td>1</td>
+<td>Internal temperature</td>
+<td>45</td>
+<td>1×</td>
+<td>no</td>
+<td><code>oC_int</code></td>
+<td>~22 ms</td>
+</tr>
+<tr>
+<td>1</td>
+<td>M3</td>
+<td>2</td>
+<td>PT100 (ext. reference, IDAC)</td>
+<td>45</td>
+<td>8×</td>
+<td>yes</td>
+<td><code>oC_PT100</code></td>
+<td>~453 ms</td>
+</tr>
+<tr>
+<td>2</td>
+<td>M4</td>
+<td>3</td>
+<td>Single-Ended AIN0</td>
+<td>45</td>
+<td>4×</td>
+<td>yes</td>
+<td><code>mV_S0</code></td>
+<td>~275 ms</td>
+</tr>
+<tr>
+<td>3</td>
+<td>M5</td>
+<td>3</td>
+<td>Single-Ended AIN1</td>
+<td>45</td>
+<td>4×</td>
+<td>yes</td>
+<td><code>mV_S1</code></td>
+<td>~275 ms</td>
+</tr>
+<tr>
+<td>4</td>
+<td>M6</td>
+<td>3</td>
+<td>Single-Ended AIN2</td>
+<td>45</td>
+<td>4×</td>
+<td>yes</td>
+<td><code>mV_S2</code></td>
+<td>~275 ms</td>
+</tr>
+<tr>
+<td>5</td>
+<td>M7</td>
+<td>3</td>
+<td>Single-Ended AIN3</td>
+<td>45</td>
+<td>4×</td>
+<td>yes</td>
+<td><code>mV_S2</code></td>
+<td>~275 ms</td>
+</tr>
+<tr>
+<td>6</td>
+<td>M8</td>
+<td>3</td>
+<td>Differential AIN0–AIN1</td>
+<td>45</td>
+<td>8×</td>
+<td>yes</td>
+<td><code>mV_D01</code></td>
+<td>~453 ms</td>
+</tr>
+<tr>
+<td>7</td>
+<td>M9</td>
+<td>3</td>
+<td>Differential AIN2–AIN3</td>
+<td>45</td>
+<td>8×</td>
+<td>yes</td>
+<td><code>mV_D23</code></td>
+<td>~453 ms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Calibration (Cali-Flag):</strong> When active, an offset zero
+point is automatically determined and subtracted before the actual
+measurement by internally shorting the inputs (AIN_p/n to AVDD/2). This
+approximately doubles the measurement time.</p>
+<h3 id="23-technical-details-of-operating-modes">2.3 Technical Details
+of Operating Modes</h3>
+<h4 id="type-1--internal-temperature-oc_int">Type 1 – Internal
+Temperature (<code>oC_int</code>)</h4>
+<ul>
+<li>Uses the internal temperature sensor of the ADS1220</li>
+<li>Resolution: raw value / 32768 = °C</li>
+<li>Configuration: <code>ITEMP_CONFIG = 0x5022E0</code>
+<ul>
+<li><code>TS_ENA</code> (internal temperature sensor active),
+single-shot, external reference (irrelevant), FIR 50/60 Hz</li>
+</ul></li>
+<li>Measurement time: approx. 22 ms (1 sample, no calibration)</li>
+</ul>
+<h4 id="type-2--pt100-oc_pt100">Type 2 – PT100
+(<code>oC_PT100</code>)</h4>
+<ul>
+<li>2-wire PT100 with 2 kΩ reference resistor and 1-mA IDAC</li>
+<li>2nd degree polynomial linearization (coefficient-based, determined
+by calibration):</li>
+</ul>
+<div class="note">
+<div class="title">
+<p>Note</p>
+</div>
+<p>Hardware must support PT100</p>
+</div>
+<p><span
+class="math display"><em>T</em> = <em>c</em><sub>0</sub> + <em>c</em><sub>1</sub> ⋅ <em>x</em> + <em>c</em><sub>2</sub> ⋅ <em>x</em><sup>2</sup></span></p>
+<p>with the linearization:</p>
+<p><span
+class="math display"><em>c</em><sub>0</sub> = −2.457390 × 10<sup>2</sup>,  <em>c</em><sub>1</sub> = 7.022650 × 10<sup>−5</sup>,  <em>c</em><sub>2</sub> = 8.966090 × 10<sup>−13</sup></span></p>
+<ul>
+<li>Valid range: raw value 2,427,000 … 4,910,000 counts (approx. –70 …
++120 °C)</li>
+<li>Configuration: <code>PT100_CONFIG = 0x80562406</code>
+<ul>
+<li>AIN0/AIN1, GAIN=8, PGA AN, EXT-REF, IDAC1 → AIN3, 1 mA</li>
+</ul></li>
+<li>Measurement time: approx. 453 ms (8 samples, calibration
+active)</li>
+</ul>
+<div class="caution">
+<div class="title">
+<p>Caution</p>
+</div>
+<p>If the raw value is outside the valid range, the PT100 channel
+returns <strong>–99 °C</strong> (sensor break or range exceeded –70 …
++120 °C).</p>
+</div>
+<h4 id="type-3--standard-adc-mv_">Type 3 – Standard ADC
+(<code>mV_…</code>)</h4>
+<ul>
+<li><strong>Single-Ended (SE):</strong> AIN0–AIN3 vs AGND, GAIN=1, PGA
+disabled
+<ul>
+<li>Conversion factor: <code>SE_MULTI_G1 = 2.4414e-4</code> (2.4414 ×
+10⁻⁴) → result in mV</li>
+<li>Internal reference (approx. 2.048 V → measurement range 0 … 2048
+mV)</li>
+<li>Configuration SE0: <code>SE_CONFIG = 0x102481</code></li>
+</ul></li>
+<li><strong>Differential (DE):</strong> AIN0–AIN1 or AIN2–AIN3,
+GAIN=128, PGA active
+<ul>
+<li>Conversion factor: <code>DE_MULTI_G128 = 1.907e-6</code> (1.907 ×
+10⁻⁶) → result in mV</li>
+<li>Internal reference → measurement range ±16 mV (with GAIN=128)</li>
+<li>Configuration DE01: <code>DE_CONFIG = 0x10240E</code></li>
+</ul></li>
+</ul>
+<div class="note">
+<div class="title">
+<p>Note</p>
+</div>
+<p>Hardware for 0/4–20 mA current measurement must include a 100 Ohm
+shunt resistor. For bridge measurement, the bridge should be set to a
+level of approx. 1 V, e.g., via a high-impedance voltage divider.</p>
+</div>
+<hr />
+<h2 id="3-sdi-12-standard-measurement-commands">3. SDI-12 Standard
+Measurement Commands</h2>
+<div class="note">
+<div class="title">
+<p>Note</p>
+</div>
+<p>Measurement is performed with the standard SDI-12 commands
+<code>aM!</code>, <code>aM1!</code> … <code>aM9!</code> (and of course
+also combined with CRC: <code>aMC!</code>, <code>aMC1!</code> …
+<code>aMC9!</code>). Here only the commands <code>M</code> and later
+<code>X</code> and <code>I</code> are documented; all other commands
+correspond to SDI-12 standard V1.3 (see SDI-12 specification).</p>
+</div>
+<h3 id="31-command-overview">3.1 Command Overview</h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Channels</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aM!</code></td>
+<td>All active channels</td>
+<td>Measures all channels whose bit in the <code>m0_mask</code> register
+is set</td>
+</tr>
+<tr>
+<td><code>aM1!</code></td>
+<td>All active + VSup</td>
+<td>Like <code>M</code>, additionally supply voltage (<code>VSup</code>)
+as the last channel</td>
+</tr>
+<tr>
+<td><code>aM2!</code></td>
+<td>Channel 0 (internal temp)</td>
+<td>Only internal chip temperature (<code>oC_int</code>)</td>
+</tr>
+<tr>
+<td><code>aM3!</code></td>
+<td>Channel 1 (PT100)</td>
+<td>Only PT100 temperature (<code>oC_PT100</code>)</td>
+</tr>
+<tr>
+<td><code>aM4!</code></td>
+<td>Channel 2 (SE AIN0)</td>
+<td>Only single-ended channel AIN0 (<code>mV_S0</code>)</td>
+</tr>
+<tr>
+<td><code>aM5!</code></td>
+<td>Channel 3 (SE AIN1)</td>
+<td>Only single-ended channel AIN1 (<code>mV_S1</code>)</td>
+</tr>
+<tr>
+<td><code>aM6!</code></td>
+<td>Channel 4 (SE AIN2)</td>
+<td>Only single-ended channel AIN2 (<code>mV_S2</code>)</td>
+</tr>
+<tr>
+<td><code>aM7!</code></td>
+<td>Channel 5 (SE AIN3)</td>
+<td>Only single-ended channel AIN3 (<code>mV_S2</code>)</td>
+</tr>
+<tr>
+<td><code>aM8!</code></td>
+<td>Channel 6 (DE AIN0–AIN1)</td>
+<td>Only differential AIN0–AIN1 (<code>mV_D01</code>)</td>
+</tr>
+<tr>
+<td><code>aM9!</code></td>
+<td>Channel 7 (DE AIN2–AIN3)</td>
+<td>Only differential AIN2–AIN3 (<code>mV_D23</code>)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><code>a</code> = SDI-12 address of the sensor (default:
+<code>0</code>)</p>
+</blockquote>
+<p><strong>Error values in measurement result:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>–99</code></td>
+<td>PT100: Outside measuring range / break</td>
+</tr>
+<tr>
+<td><code>–9998</code></td>
+<td>ADC initialization error</td>
+</tr>
+<tr>
+<td><code>–9999</code></td>
+<td>General measurement error</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-sdi-12-advanced-commands-x-commands">4. SDI-12 Advanced
+Commands (<code>X</code> commands)</h2>
+<p>All configuration commands start with <code>aX</code> followed by the
+command letter. For <strong>reading</strong>, no <code>=</code> sign is
+used, for <strong>writing</strong> use <code>=Value</code>. Each command
+ends with <code>!</code>.</p>
+<div class="warning">
+<div class="title">
+<p>Warning</p>
+</div>
+<p>All parameter changes are <strong>volatile</strong> (RAM). Only
+<code>aXWrite!</code> saves them permanently in Flash (NVM).</p>
+</div>
+<hr />
+<h3 id="41-coefficients-k--individual-scaling-per-channel">4.1
+Coefficients (<code>K</code>) – Individual scaling per channel</h3>
+<p>Each physical channel has <strong>2 coefficients</strong>:
+<code>Multi</code> (even index) and <code>Offset</code> (odd index).</p>
+<p>Application order:</p>
+<pre><code>Result = (ADC raw value × channel multi) × Kn_Multi − Kn_Offset</code></pre>
+<p><strong>Coefficient table:</strong></p>
+<table>
+<thead>
+<tr>
+<th>No.</th>
+<th>Name</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>K0</td>
+<td>Temp_int.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K1</td>
+<td>Temp_int.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K2</td>
+<td>Temp_PT100.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K3</td>
+<td>Temp_PT100.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K4</td>
+<td>SEnd_0.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K5</td>
+<td>SEnd_0.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K6</td>
+<td>SEnd_1.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K7</td>
+<td>SEnd_1.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K8</td>
+<td>SEnd_2.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K9</td>
+<td>SEnd_2.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K10</td>
+<td>SEnd_3.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K11</td>
+<td>SEnd_3.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K12</td>
+<td>Diff_01.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K13</td>
+<td>Diff_01.Offset</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>K14</td>
+<td>Diff_23.Multi</td>
+<td>1.0</td>
+</tr>
+<tr>
+<td>K15</td>
+<td>Diff_23.Offset</td>
+<td>0.0</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Syntax:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aXKn!</code></td>
+<td>Read coefficient n</td>
+<td><code>0XK2!</code></td>
+</tr>
+<tr>
+<td><code>aXKn=Value!</code></td>
+<td>Set coefficient n</td>
+<td><code>0XK3=0.5!</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response:</strong> <code>aKn=Value</code> (e.g.,
+<code>0K3=0.500000</code>)</p>
+<hr />
+<h3 id="42-channel-mask-b--active-channels-for-m--m1">4.2 Channel Mask
+(<code>B</code>) – Active channels for M / M1</h3>
+<p>The bitmask <code>m0_mask</code> (1 byte) controls which channels are
+measured with <code>M</code> and <code>M1</code>.<br />
+Bit 0 → Channel 0 (iTemp), Bit 1 → Channel 1 (PT100), ..., Bit 7 →
+Channel 7 (DE23).</p>
+<p><strong>Default value:</strong> <code>m0_mask = 60</code> =
+<code>0b00111100</code> → Channels 2, 3, 4, 5 active (SE AIN0–AIN3)</p>
+<p><span class="math display">60 = 4 + 8 + 16 + 32 = Bit 2 + Bit 3 + Bit
+4 + Bit 5</span></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aXB!</code></td>
+<td>Read current mask</td>
+<td><code>0XB!</code></td>
+</tr>
+<tr>
+<td><code>aXB=Value!</code></td>
+<td>Set mask (1–255 decimal)</td>
+<td><code>0XB=60!</code> (only SE AIN0–AIN3)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response:</strong> <code>aB=Value</code> (e.g.,
+<code>0B=60</code>)</p>
+<p><strong>Bit assignment of channels:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th>Bit Value</th>
+<th>Channel</th>
+<th>Description</th>
+<th>Active with m0_mask=60?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>Internal Temperature</td>
+<td>no</td>
+</tr>
+<tr>
+<td>1</td>
+<td>2</td>
+<td>1</td>
+<td>PT100</td>
+<td>no</td>
+</tr>
+<tr>
+<td>2</td>
+<td>4</td>
+<td>2</td>
+<td>SE AIN0 (mV_S0)</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>8</td>
+<td>3</td>
+<td>SE AIN1 (mV_S1)</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>16</td>
+<td>4</td>
+<td>SE AIN2 (mV_S2)</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>32</td>
+<td>5</td>
+<td>SE AIN3 (mV_S2)</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td>64</td>
+<td>6</td>
+<td>Diff AIN0–AIN1</td>
+<td>no</td>
+</tr>
+<tr>
+<td>7</td>
+<td>128</td>
+<td>7</td>
+<td>Diff AIN2–AIN3</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example: Enable all SE channels + PT100</strong></p>
+<pre><code>0XB=62!        62 = 2+4+8+16+32 (PT100 + SE AIN0…AIN3)
+0XWrite!</code></pre>
+<blockquote>
+<p>Channel active status and full <code>k</code> output → Section
+5.1.</p>
+</blockquote>
+<hr />
+<h3 id="43-individual-unit-u--override-channel-label">4.3 Individual
+Unit (<code>U</code>) – Override channel label</h3>
+<p>Each channel has a default unit from <code>ad_physkan[]</code> (e.g.,
+<code>oC_PT100</code>). This can be overridden per channel (max. 8
+characters). If empty string is used, the default unit is applied.</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aXUn!</code></td>
+<td>Read unit of channel n</td>
+<td><code>0XU1!</code></td>
+</tr>
+<tr>
+<td><code>aXUn=Text!</code></td>
+<td>Set unit of channel n</td>
+<td><code>0XU1=degC!</code></td>
+</tr>
+<tr>
+<td><code>aXUn=!</code></td>
+<td>Reset unit of channel n</td>
+<td><code>0XU1=!</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response:</strong> <code>aUn='Text'</code> (e.g.,
+<code>0U1='degC'</code>)</p>
+<hr />
+<h3 id="44-output-precision-p--decimal-places">4.4 Output Precision
+(<code>P</code>) – Decimal places</h3>
+<p>Sets the number of decimal places for the SDI-12 output (0–9).<br />
+Special values 7, 8, 9: standard format <code>%+f</code> (printf
+default).</p>
+<p><strong>Format codes:</strong></p>
+<table>
+<thead>
+<tr>
+<th>P-value</th>
+<th>Format</th>
+<th>Example output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>%+.0f</code></td>
+<td><code>+23</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>%+.1f</code></td>
+<td><code>+23.4</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>%+.2f</code></td>
+<td><code>+23.45</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>%+.3f</code></td>
+<td><code>+23.450</code></td>
+</tr>
+<tr>
+<td>4–6</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr>
+<td>7–9</td>
+<td><code>%+f</code></td>
+<td>printf-default</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aXPn!</code></td>
+<td>Read precision of channel n</td>
+<td><code>0XP1!</code></td>
+</tr>
+<tr>
+<td><code>aXPn=Value!</code></td>
+<td>Set precision of channel n (0–9)</td>
+<td><code>0XP1=3!</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Response:</strong> <code>aPn=Value</code> (e.g.,
+<code>0P1=3</code>)</p>
+<hr />
+<h3 id="45-save-parameters--identify-sensor">4.5 Save Parameters /
+Identify Sensor</h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>aXWrite!</code></td>
+<td>Save all parameters (SDI address, coefficients, mask, units,
+precision) permanently in flash</td>
+</tr>
+<tr>
+<td><code>aXSensor!</code></td>
+<td>Query sensor type → response: <code>aADS1220!</code></td>
+</tr>
+</tbody>
+</table>
+<div class="important">
+<div class="title">
+<p>Important</p>
+</div>
+<p><code>aXWrite!</code> must be explicitly called after
+<strong>each</strong> configuration change – otherwise all changes are
+lost on the next restart.</p>
+</div>
+<hr />
+<h2 id="5-command-line-commands-tb-uart--debug-terminal">5. Command Line
+Commands (TB-UART / Debug Terminal)</h2>
+<p>These commands are available via the serial debug interface (tb_tools
+UART).</p>
+<h3 id="51-device-commands-device_type_cmdline">5.1 Device Commands
+(<code>device_type_cmdline</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>k</code></td>
+<td>Output all coefficients (K0–K15) with names, current value, unit,
+precision, and active status (ON/bit number)</td>
+</tr>
+<tr>
+<td><code>p</code></td>
+<td>(Reserved, no function)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example output <code>k</code> (with <code>m0_mask = 60</code>
+– only SE AIN0…AIN3 active):</strong></p>
+<pre><code>&gt;k
+K0: 1.000000 Temp_int.Multi(f) (Def: 1.0) Unit:&#39;oC_int&#39; Prec:2 OFF(1)
+K1: 0.000000 Temp_int.Offset(f) (Def: 0.0)
+K2: 1.000000 Temp_PT100.Multi(f) (Def: 1.0) Unit:&#39;oC_PT100&#39; Prec:3 OFF(2)
+K3: 0.000000 Temp_PT100.Offset(f) (Def: 0.0)
+K4: 1.000000 SEnd_0.Multi(f) (Def: 1.0) Unit:&#39;mV_S0&#39; Prec:9 ON(4)*
+K5: 0.000000 SEnd_0.Offset(f) (Def: 0.0)
+K6: 1.000000 SEnd_1.Multi(f) (Def: 1.0) Unit:&#39;mV_S1&#39; Prec:9 ON(8)*
+K7: 0.000000 SEnd_1.Offset(f) (Def: 0.0)
+K8: 1.000000 SEnd_2.Multi(f) (Def: 1.0) Unit:&#39;mV_S2&#39; Prec:9 ON(16)*
+K9: 0.000000 SEnd_2.Offset(f) (Def: 0.0)
+K10: 1.000000 SEnd_3.Multi(f) (Def: 1.0) Unit:&#39;mV_S2&#39; Prec:9 ON(32)*
+K11: 0.000000 SEnd_3.Offset(f) (Def: 0.0)
+K12: 1.000000 Diff_01.Multi(f) (Def: 1.0) Unit:&#39;mV_D01&#39; Prec:9 OFF(64)
+K13: 0.000000 Diff_01.Offset(f) (Def: 0.0)
+K14: 1.000000 Diff_23.Multi(f) (Def: 1.0) Unit:&#39;mV_D23&#39; Prec:9 OFF(128)
+K15: 0.000000 Diff_23.Offset(f) (Def: 0.0)
+Bitmask Channels: 60</code></pre>
+<p>The column at the end of the line indicates:</p>
+<ul>
+<li><code>ON(BitValue)*</code> – Channel is active (bit in
+<code>m0_mask</code> set)</li>
+<li><code>OFF(BitValue)</code> – Channel is inactive (bit not set)</li>
+<li>Only Multi coefficients (even index) show the status; Offset
+coefficients (odd index) have no status suffix.</li>
+</ul>
+<h3 id="52-debug-commands-only-if-define-debug-is-active">5.2 Debug
+Commands (only if <code>#define DEBUG</code> is active)</h3>
+<div class="tip">
+<div class="title">
+<p>Tip</p>
+</div>
+<p>Debug commands are only available if <code>#define DEBUG</code> is
+active in the firmware.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>a&lt;n&gt;</code></td>
+<td>Measure channel n (0–7) in continuous loop and output raw value,
+runtime and physical result. Exit with any key.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Example output <code>a1</code> (PT100):</strong></p>
+<pre><code>Val:1
+AD-Reset: 0
+Res:3456789 (P:470/Real:463 msec) =&gt; +21.456 oC_PT100
+Res:3456901 (P:470/Real:461 msec) =&gt; +21.458 oC_PT100
+...
+AD-Deepsleep</code></pre>
+<hr />
+<h2 id="6-parameter-storage-nvm">6. Parameter Storage (NVM)</h2>
+<p>All changeable operating parameters are stored in the internal flash
+of the processor:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>param.koeff[]</code></td>
+<td>16 float coefficients (K0–K15)</td>
+</tr>
+<tr>
+<td><code>param.m0_mask</code></td>
+<td>Channel mask for M / M1</td>
+</tr>
+<tr>
+<td><code>param.precision[]</code></td>
+<td>Output precision per channel (0–9)</td>
+</tr>
+<tr>
+<td><code>param.ind_unit[]</code></td>
+<td>Individual units per channel</td>
+</tr>
+<tr>
+<td><code>param.ble_advname</code></td>
+<td>BLE advertising name</td>
+</tr>
+<tr>
+<td>SDI-12 address</td>
+<td>Stored under <code>ID_INTMEM_SDIADR</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Storage is performed exclusively by <code>aXWrite!</code> (→ Section
+4.5).</p>
+</blockquote>
+<hr />
+<h2 id="7-device-identification">7. Device Identification</h2>
+<p>The sensor ID has the following format:</p>
+<pre><code>TT_A24_A_0350_OSX&lt;MAC_Low_HEX&gt;</code></pre>
+<p>Example: <code>TT_A24_A_0350_OSX1A2B3C4D</code></p>
+<ul>
+<li><code>TT</code> = TT (internal identifier)</li>
+<li><code>A24</code> = Analog Sensor 24 Bit</li>
+<li><code>A</code> = Software identifier</li>
+<li><code>0350</code> = Device type</li>
+<li><code>OSX</code> = OSX master platform</li>
+<li><code>&lt;MAC&gt;</code> = Lower 32 bits of the BLE MAC address
+(corresponds to standard BLE advertising name)</li>
+</ul>
+<hr />
+<h2 id="8-factory-default-configuration">8. Factory Default
+Configuration</h2>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SDI-12 address</td>
+<td><code>0</code></td>
+</tr>
+<tr>
+<td>m0_mask</td>
+<td><code>60</code> (channels 2–5 active: SE AIN0…AIN3)</td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>K0:2, K1:3, K2–K7:9 (printf-default)</td>
+</tr>
+<tr>
+<td>All coefficients</td>
+<td>Multi=1.0, Offset=0.0</td>
+</tr>
+<tr>
+<td>Individual units</td>
+<td>empty (channel default)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-quick-reference-sdi-12-commands">9. Quick Reference SDI-12
+Commands</h2>
+<pre><code>aM!           Measure all active channels
+aM1!          Measure all active channels + supply voltage
+aM2! – aM9!   Measure single channel 0–7
+aXKn!         Read coefficient n
+aXKn=val!     Set coefficient n
+aXB!          Read channel mask
+aXB=val!      Set channel mask (e.g., 60 = only SE AIN0…AIN3)
+aXUn!         Read channel n unit
+aXUn=str!     Set channel n unit
+aXPn!         Read channel n precision
+aXPn=val!     Set channel n precision (0–9)
+aXWrite!      Save parameters in flash
+aXSensor!     Query sensor type</code></pre>
+</body>
+</html>

@@ -1,14 +1,38 @@
+% --- preamble.tex - in Kombin mit LUA-Filter ---
 \usepackage{tcolorbox}
 
 % --- Seiten-Layout: schmale Raender fuer Desktop-PDF-Ansicht ---
 \usepackage[a4paper, left=2cm, right=2cm, top=2.0cm, bottom=2.0cm]{geometry}
 
-% GitHub Alert Boxen - Sonnet kennt sich da gut aus und kann ggfs. Layout apassen
+% --- Listings (Code-Blocks mit hellgrauem Hintergrund)
+\usepackage{xcolor}
+\usepackage{listings}
+\tcbuselibrary{listings}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codebar}{RGB}{220,220,220}
+\definecolor{codecomment}{RGB}{100,100,100}
+
+\newtcblisting{codeblock}{
+  colback=codebg,
+  colframe=codebar,
+  listing only,
+  left=4pt, right=4pt, top=2pt, bottom=2pt,
+  listing options={
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    showstringspaces=false,
+    commentstyle=\color{codecomment},
+    keywordstyle=\bfseries
+  }
+}
+
+% --- GitHub Alert Boxen - Sonnet kennt sich da gut aus und kann ggfs. Layout apassen
 \newtcolorbox{notebox}{
   colback=blue!5!white,
   colframe=blue!75!black,
   fonttitle=\bfseries,
-  title=ℹ️  - Note
+  title=ℹ️  - Info
 }
 
 \newtcolorbox{tipbox}{

@@ -1,0 +1,42 @@
+# This is a TEST directory for AutoDoc:
+
+## Sourcefiles in this directory (./docu_T350):
+
+- OSX_ad4to20mA.png : Pictures for the .md
+- T350_handbuch.md . The Source-Docu itself (German)
+
+## The translation:
+
+Optionally an Englich version may be generated (see README.MD) via
+	
+	php tools/mdtool.php docs_T350/T350_handbuch.md docs_T350/T350_manual.md -c tools/translate_de_en.txt
+
+generates:
+
+- T350_manual.md . The Source-Docu itself (English)
+
+## The conversion:
+
+This cmd(s) from the **directory above** generate HTML and PDF from it (and includes the CSS):
+
+	./makedocu/docrun docs_T350/T350_handbuch -h -p
+
+Optionally also for English:
+
+	./makedocu/docrun docs_T350/T350_manual -h -p
+	
+## Result: 
+
+3 (or 5) new files should appear:
+
+German:
+
+- T350_handbuch.html (and flavoured.css)
+- T350_handbuch.pdf
+
+English:
+
+- T350_manual.html (and flavoured.css)
+- T350_manual.pdf
+
+***

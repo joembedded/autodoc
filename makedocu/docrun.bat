@@ -1,15 +1,26 @@
-rem *** Express-Tool: Einfach den ganzen Ordner makedocu in das Verzeichnis der *.MD-Datei kopieren
-rem *** Evtl. aus _light oder _medium die Default-CSS in diese Verzeichnis kopieren und 
-rem *** USAGE: makedocu/docrun <infile> (*.md, with or without extension)
-rem *** erzeugt dann PDF und HTML 
+@echo off
+echo "USAGE: makedocu/docrun <infile> (*.md, with or without extension) [-h] [-p]"
+echo "       Args: -h : HTML outfile, -p : PDF outfile"
 
-
-set MDBase=%~n1
+set MDBase=%~dpn1
 set SD=%~dp0
+set DO_HTML=0
+set DO_PDF=0
 
-pandoc %MDBase%.md --from gfm+alerts --css=flavoured.css --standalone -o %MDBase%.html
+for %%A in (%*) do (
+    if /i "%%A"=="-h" set DO_HTML=1
+    if /i "%%A"=="-p" set DO_PDF=1
+)
 
-pandoc %MDBase%.md -f gfm+alerts --lua-filter="%SD%github-alerts.lua" --pdf-engine=lualatex -H "%SD%preamble.tex" --metadata-file="%SD%commonpdf.yml" -o %MDBase%.pdf
+if %DO_HTML%==1 (
+    echo "Generate HTML documentation from %MDBase%.md"
+    pandoc %MDBase%.md --from gfm+alerts --resource-path="%~dp1." --css=flavoured.css --standalone -o %MDBase%.html
+    copy "%SD%flavoured.css" "%~dp1."
+)
 
-copy "%SD%flavoured.css" .
+if %DO_PDF%==1 (
+    echo "Generate PDF documentation from %MDBase%.md"
+    pandoc %MDBase%.md -f gfm+alerts --resource-path="%~dp1." --lua-filter="%SD%github-alerts.lua" --pdf-engine=lualatex -H "%SD%preamble.tex" --metadata-file="%SD%commonpdf.yml" -o %MDBase%.pdf
+)
+echo "Done."
 

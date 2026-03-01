@@ -41,3 +41,13 @@ function Div(el)
   
   return el
 end
+
+-- Code-Blocks mit hellgrauem Hintergrund (via codeblock/tcolorbox aus preamble.tex)
+function CodeBlock(el)
+  local lang = ""
+  if el.classes[1] then
+    lang = "[language=" .. el.classes[1] .. "]"
+  end
+  local latex = '\\begin{codeblock}' .. lang .. '\n' .. el.text .. '\n\\end{codeblock}'
+  return pandoc.RawBlock('latex', latex)
+end

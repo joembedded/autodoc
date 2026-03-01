@@ -1,165 +1,236 @@
 # AUTODOC 📚
 
-An automated documentation system by **JoEmbedded**
+Ein automatisiertes Dokumentationssystem von **JoEmbedded**
 
-This repository is designed to automatically create documentation from modular building blocks – with support for **Emojis** and **GitHub-Alerts**. The created Markdown files can be translated, compacted, or otherwise processed with AI support and converted into various formats.
+Dieses Repository dient dazu, Dokumentation automatisiert aus Bausteinen zu erstellen – mit Unterstützung für **Emojis** und **GitHub-Alerts**. Die erstellten Markdown-Dateien können mit KI-Unterstützung übersetzt, kompaktiert oder anderweitig verarbeitet und in verschiedene Formate konvertiert werden.
 
 ---
 
-## 🎯 Overview
+## 🎯 Übersicht
 
-**AUTODOC** enables an efficient workflow for creating multilingual, professional documentation with optional AI integration. **AUTODOC** can also be used for many other purposes: summaries, embellishments, ...,
-as it is easily integrated as a command-line tool.
+**AUTODOC** ermöglicht einen effizienten Workflow für die Erstellung mehrsprachiger, professioneller Dokumentation unter optionalem KI-Einsatz. **AUTODOC** kann aber auch für vieles andere verwendet werden: Zusammenfassungen, Verzierungen, ...,
+da es sich als Kommandozeilen-Tool leicht integrieren lässt.
 
-Example workflow:
-```bash
-docs/recipes/*.md → build/*.md → AI-Processing → HTML/PDF
-```
+Zwei typische Anwendungsfälle sind im Repository direkt als Beispiele enthalten:
+
+| Anwendungsfall | Quellverzeichnis | Ausgabeverzeichnis | Beschreibung |
+|----------------|------------------|--------------------|--------------|
+| **Blöcke zusammensetzen** | `docs_blocks/` | `build_blocks/` | Dokumentation aus wiederverwendbaren Bausteinen zusammenstellen, übersetzen und konvertieren |
+| **Einzeldatei konvertieren** | `docs_T350/` | `docs_T350/` (in-place) | Fertige MD-Datei schnell in HTML und PDF umwandeln – ideal für Datenblätter |
 
 > [!NOTE]
-> MD files are optimal for embeddings. You can load the MD files of one language into a vector store, and the AI can use them for assistant systems (like [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html)). One language is sufficient, as the AI can respond in almost any (other) language.
+> MD-Dateien sind optimal für Embeddings. Man kann die MD-Dateien einer Sprache in einen Vector-Store laden, und die KI kann sie z.B. für ein Assistenz-System (wie [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html) ) verwenden. Dazu reicht EINE Sprache, da die KI in nahezu jeder (anderen) Sprache antworten kann.
 
-As a help, some of the files mentioned in the documentation are left in the output.
-
----
-
-## 📁 Project Structure
-
-| Directory | Description |
-|-----------|-------------|
-| `docs/` | Source files (blocks and recipes) |
-| `build/` | All generated output (MD, HTML, PDF) |
-| `makedocu/` | Helper files (GitHub-Flavored-Markdown, ...) and conversion tools |
-| `flavours_css/` | CSS files (flavoured_light, flavoured_medium) for selection |
-| `tools/` | PHP scripts for build and AI processing |
-| `secret/` | API keys (e.g., for OpenAI) |
+Als Hilfe sind einige der in der Doku erwähnten Dateien im Output belassen.
 
 ---
 
-## 🔧 Detailed Workflow
+## 📁 Projektstruktur
 
-### 1️⃣ Assemble Markdown
+| Verzeichnis | Beschreibung |
+|-------------|--------------|
+| `docs_blocks/` | Quell-Dateien für Anwendungsfall 1 (Blöcke und Rezepte) |
+| `build_blocks/` | Generierter Output für Anwendungsfall 1 (MD, HTML, PDF) |
+| `docs_T350/` | Beispiel für Anwendungsfall 2 – fertige MD-Datei inkl. Bilder |
+| `makedocu/` | Hilfs-Dateien (GitHub-Flavored-Markdown, ...) und Tools für Konvertierung |
+| `flavours_css/` | CSS-Dateien (flavoured_light, flavoured_medium) zur Auswahl |
+| `tools/` | PHP-Scripts für Build und KI-Verarbeitung |
+| `secret/` | API-Keys (z.B. für OpenAI) |
 
-Create a composite Markdown file from individual building blocks,
-the sources are in German:
+---
 
+## 🗂️ Anwendungsfall 1: Dokumentation aus Bausteinen
+
+Workflow:
 ```bash
-php tools/build.php docs/recipes/produkt-a.md build/produkt_a_de.md
+docs_blocks/recipes/*.md → build_blocks/*.md → KI-Verarbeitung → HTML/PDF
 ```
 
-**Input:** Recipe file with include directives  
-**Output:** Complete MD file in `build/`
+Die Quell-Dateien in `docs_blocks/` sind in zwei Ebenen aufgeteilt:
+
+```
+docs_blocks/
+  recipes/        ← Rezept-Dateien (steuern den Zusammenbau)
+    produkt-a.md
+  blocks/         ← Wiederverwendbare Textbausteine
+    intro.md
+    warranty.md
+  testtext.md     ← Einfache Test-Quelldatei
+```
+
+Rezept-Dateien verwenden `{{include: ...}}`-Anweisungen und YAML-Frontmatter-Variablen (`{{product_name}}` etc.), um Bausteine zu einer vollständigen MD-Datei zusammenzusetzen.
+
+### 1️⃣ Markdown zusammensetzen
+
+```bash
+php tools/build.php docs_blocks/recipes/produkt-a.md build_blocks/produkt_a_de.md
+```
+
+**Eingabe:** Rezept-Datei mit Include-Anweisungen  
+**Ausgabe:** Vollständige MD-Datei in `build_blocks/`
 
 > [!TIP]
-> MD/TXT files are optimal material for embedding in vector stores.
-> A few test MDs were already previously built into [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html). Since the KI can answer in many different languages, only one version in one langugae is sufficient. For testing how well the vector store handles them: Top!
-
+> Die Deutschen MD-/TXT-Dateien sind optimales Material für Embedding in Vector-Stores,
+> ein paar Test-MD wurden bereits früher in [**JoKnow**](https://joembedded.de/x3/aiplay/sw/jolaunch.html) verbaut. Zum Testen, wie gut der Vector-Store damit klarkommt: Top!
 
 ---
 
-### 2️⃣ AI-Supported Document Processing (via OpenAI)
+### 2️⃣ KI-gestützte Dokumentverarbeitung (via OpenAI)
 
-**mdtool.php** is a flexible tool for AI-based processing of Markdown files, e.g., translating, compacting, adding summaries.
+**mdtool.php** ist ein flexibles Tool zur KI-basierten Verarbeitung von Markdown-Dateien, z. B. Übersetzen, Kompaktieren, Zusammenfassung einfügen.
 
 #### 📖 Syntax
 
 ```bash
-php tools/mdtool.php <inputfile.md> [options] [outputfile.md]
+php tools/mdtool.php <inputfile.md> [optionen] [outputfile.md]
 ```
 
-**Parameters:**
-- `inputfile.md` - Input file (mandatory)
-- `outputfile.md` - Output file (optional, otherwise stdout)
+**Parameter:**
+- `inputfile.md` - Eingabedatei (mandatory)
+- `outputfile.md` - Ausgabedatei (optional, sonst stdout)
 
-**Options** (details see PHP source code):
-- `-c <file>` - Load instructions from file. Useful e.g., for professional translations where e.g., formatting must be considered. Example here: `tools/translate_de_en.txt`
-- `-i "<text>"` - Specify instructions directly. Useful for small tasks, e.g., spell checking for plain text blocks or creating a summary
-- `-m <model>` - Override model (default: `gpt-4.1-mini`)
+**Optionen** (Details siehe PHP-Quellcode):
+- `-c <datei>` - Instructions aus Datei laden. Sinnvoll z. B. bei professionellen Übersetzungen, wo z. B. Formatierungen beachtet werden müssen. Als Beispiel ist hier `tools/translate_de_en.txt`
+- `-i "<text>"` - Instructions direkt angeben. Sinnvoll für Kleinigkeiten, z. B. Rechtschreibprüfung bei reinen Textblöcken oder Erstellen einer Zusammenfassung
+- `-m <modell>` - Model überschreiben (default: `gpt-4.1-mini`)
   (Note: `gpt-4.1-mini` is perfect for technical translations, `nano` is sometimes to relaxed, `gpt-5` normally oversized. For prompts: Ask **ChatGPT** )
 
-#### 📝 Examples
+#### 📝 Beispiele
 
-**Translate (DE→EN):**
+**Übersetzen (DE→EN):**
 ```bash
-php tools/mdtool.php build/produkt_a_de.md build/produkt_a_en.md -c tools/translate_de_en.txt
+php tools/mdtool.php build_blocks/produkt_a_de.md build_blocks/produkt_a_en.md -c tools/translate_de_en.txt
 ```
 
-**Compact:**
+**Kompaktieren:**
 ```bash
-php tools/mdtool.php build/test.md build/test_compact.md -i "Compact to small summary"
+php tools/mdtool.php build_blocks/produkt_a_de.md build_blocks/produkt_a_de_compact.md -i "Compact to small summary"
 ```
 
-**Direct output (stdout via > to file):**
+**Direkte Ausgabe (stdout via > in Datei):**
 ```bash
-php tools/mdtool.php build/test.md -i "Translate to English" > build/output.md
+php tools/mdtool.php build_blocks/produkt_a_de.md -i "Translate to English" > build_blocks/output.md
 ```
 
-**'Embellished' version with spoiler:**
+**'Verzierte' Version mit Spoiler:**
 ```bash
-php tools/mdtool.php docs/testtext.md build/testtext_verziert_spoiler.md -i "Add a brief summary as GitHub-Alert '> [!NOTE] >' at the beginning of the file, then add the original text afterward and beautify the entire text with Emojis"
+php tools/mdtool.php docs_blocks/testtext.md build_blocks/testtext_verziert_spoiler.md -i "Füge am Anfang der Datei eine kurze Zusammenfassung als GitHub-Alert '> [!NOTE] >' ein, füge dann den Originaltext hintenan und verschöndere den gesamten Text mit Emojis"
 ```
 
-**Use different model:**
+**Anderes Model verwenden:**
 ```bash
-php tools/mdtool.php build/test.md build/test.en.md -m gpt-4.1-nano -c tools/translate_de_en.txt
+php tools/mdtool.php build_blocks/produkt_a_de.md build_blocks/produkt_a_en.md -m gpt-4.1-nano -c tools/translate_de_en.txt
 ```
 
-**Copy file (without AI processing):**
+**Datei kopieren (ohne KI-Verarbeitung):**
 ```bash
-php tools/mdtool.php build/test.md build/test_copy.md
+php tools/mdtool.php build_blocks/produkt_a_de.md build_blocks/produkt_a_de_copy.md
 ```
 
 > [!IMPORTANT]
-> AI processing requires an **OpenAI API key** in `secret/keys.inc.php`.  
-> Without instructions (`-c` or `-i`), the file is only copied (no API call).
+> KI-Verarbeitung benötigt einen **OpenAI API-Key** in `secret/keys.inc.php`.  
+> Ohne Instructions (`-c` oder `-i`) wird die Datei nur kopiert (kein API-Call).
 
 > [!TIP]
-> YAML frontmatter always remains unchanged – only the document body is processed.
+> YAML-Frontmatter bleibt immer unverändert – nur der Dokumenten-Body wird verarbeitet.
 
 ---
 
-### 3️⃣ Simplified Documentation Creation with docrun.bat
+### 3️⃣ Konvertierung zu HTML / PDF (Anwendungsfall 1)
 
-For quick PDF and HTML creation, the `makedocu/` directory can simply be copied into a directory with an MD file and the **docrun.bat** tool can be called:
+Nach dem KI-Schritt liegen fertige MD-Dateien in `build_blocks/`. Diese können direkt mit Pandoc konvertiert werden (siehe Abschnitte 4️⃣ und 5️⃣ unten), oder komfortabel über `docrun.bat`:
 
 ```bash
-makedocu/docrun.bat MDFILENAME
+makedocu/docrun build_blocks/produkt_a_de -h -p
 ```
 
-**Parameters:**
-- `MDFILENAME` - Name of the MD file **without** `.md` extension
-
-**Output:**
-- `MDFILENAME.pdf` - PDF document
-- `MDFILENAME.html` - HTML document
-
-**CSS Selection:**
-The `flavoured.css` used can be selected from the variants in `flavours_css/`:
-- `flavoured_light/flavoured.css` - lightweight design
-- `flavoured_medium/flavoured.css` - balanced design (default)
-
-Simply copy the desired CSS file to `makedocu/flavoured.css`.
-
-> [!TIP]
-> This is the fastest way to create professional documentation – just call docrun.bat!
+**Ausgabe** (im selben Verzeichnis wie die MD-Datei):
+- `produkt_a_de.html` + `flavoured.css`
+- `produkt_a_de.pdf`
 
 ---
 
-### 4️⃣ Generate PDF
+## 📄 Anwendungsfall 2: Einzeldatei direkt konvertieren
 
-Convert Markdown to professional PDFs with **Pandoc**.
-LaTeX typically already uses beautiful serif fonts, which is less common in HTML, where sans-serif fonts predominate. If needed, a custom YAML file can change Pandoc's default settings. These can be stored in the frontmatter or in a separate file (template in `makedocu/commonpdf.yml`).
+Für fertige Markdown-Dateien (z.B. Datenblätter, Handbücher) die **bereits vollständig** vorliegen, entfallen die Schritte 1 und 2. Das Beispiel `docs_T350/` zeigt diesen Workflow:
 
-There are several LaTeX engines for Pandoc ("LuaLaTeX", "XeLaTeX", ...) and not every one can do everything on every system. In case of doubt, unfortunately, only trial and error helps... The engine is set with `--pdf-engine=lualatex` or `--pdf-engine=xelatex`.
+```
+docs_T350/
+  T350_manual.md      ← fertige Quelldatei
+  OSX_ad4to20mA.png   ← Bild(er) direkt daneben
+  Howto_T350.txt      ← kurze Anleitung
+```
 
-**Note:** This is my setup for Windows. For Linux, other emoji fonts can also be used (e.g., `Noto Color Emoji`, as mainfont e.g., "Helvetica", "Liberation Sans", "Comic Sans MS", ...). Missing fonts will be listed. **Pandoc** is usually quite slow for PDFs (often takes several seconds, whereas HTML is usually much faster).
+Ein einziger Aufruf aus dem **Wurzelverzeichnis** erzeugt HTML und PDF im selben Verzeichnis:
+
+```bash
+./makedocu/docrun docs_T350/T350_manual -h -p
+```
+
+**Ergebnis** in `docs_T350/`:
+- `T350_manual.html` + `flavoured.css`
+- `T350_manual.pdf`
+
+> [!TIP]
+> Dies ist der schnellste Weg für Datenblätter und Einzeldokumente: MD-Datei und Bilder in ein Verzeichnis legen, `docrun` aufrufen – fertig!
+
+### 🌐 Optionale Übersetzung (Anwendungsfall 2)
+
+Die fertige MD-Datei kann vor der Konvertierung optional per KI übersetzt werden. Demo DE→EN für `T350_handbuch.md`:
+
+```bash
+php tools/mdtool.php docs_T350/T350_handbuch.md docs_T350/T350_handbuch_en.md -c tools/translate_de_en.txt
+```
+
+Anschließend die übersetzte Datei genauso konvertieren:
+
+```bash
+./makedocu/docrun docs_T350/T350_handbuch_en -h -p
+```
+
+**Ergebnis** in `docs_T350/`:
+- `T350_handbuch_en.html` + `T350_handbuch_en.pdf`
+
+> [!NOTE]
+> Die Übersetzung benötigt einen OpenAI API-Key in `secret/keys.inc.php`. Die Bilder im selben Verzeichnis werden automatisch für beide Sprachversionen mitverwendet.
+
+**docrun.bat – Syntax:**
+
+```bash
+makedocu/docrun <pfad/dateiname> [-h] [-p]
+```
+
+| Argument | Bedeutung |
+|----------|-----------|
+| `pfad/dateiname` | Pfad zur MD-Datei **ohne** `.md`-Erweiterung (relativ oder absolut) |
+| `-h` | HTML-Ausgabe erzeugen |
+| `-p` | PDF-Ausgabe erzeugen |
+| (beide) | HTML **und** PDF erzeugen |
+
+**CSS-Auswahl:**
+Die verwendete `flavoured.css` wird automatisch von `makedocu/` ins Zielverzeichnis kopiert. Die CSS-Variante kann gewählt werden:
+- `flavours_css/flavoured_light/flavoured.css` - leichtgewichtiges Design
+- `flavours_css/flavoured_medium/flavoured.css` - ausgewogenes Design (Default)
+
+Kopiere die gewünschte Variante nach `makedocu/flavoured.css`.
+
+---
+
+### 4️⃣ PDF erzeugen (manuell mit Pandoc)
+
+Konvertiere Markdown in professionelle PDFs mit **Pandoc**.
+Üblicherweise verwendet LaTeX bereits schöne Serifen-Schriftarten, was bei HTML weniger verbreitet ist, da dort eher serifenlose Schriftarten vorherrschen. Dazu kann ggf. eine eigene YAML-Datei die Pandoc-Voreinstellungen ändern. Diese können im Frontmatter oder in einer separaten Datei (Muster in `makedocu/commonpdf.yml`) hinterlegt werden.
+
+Es gibt mehrere LaTeX-Engines für Pandoc ("LuaLaTeX", "XeLaTeX", ...) und nicht jede kann auf jedem System alles. Im Zweifelsfall hilft leider nur Probieren... Die Engine wird mit `--pdf-engine=lualatex` oder `--pdf-engine=xelatex` gesetzt.
+
+**Hinweis:** Hier mein Setup für Windows. Für Linux können evtl. auch andere Emoji-Fonts verwendet werden (z.B. `Noto Color Emoji`, als Mainfont z.B. auch "Helvetica", "Liberation Sans", "Comic Sans MS", ...). Fehlende Fonts werden aufgelistet. **Pandoc** ist bei PDF meist recht langsam (dauert oft mehrere Sekunden, bei HTML dagegen meist viel schneller).
 
 
-#### 🔹 With LuaLaTeX (recommended for (colored) Emojis)
+#### 🔹 Mit LuaLaTeX (empfohlen für (farbige) Emojis)
 
-#### 📝 Frontmatter for colored Emojis
+#### 📝 Frontmatter für farbige Emojis
 
-Add a fallback font for emojis (or in the metafile):
+Füge einen Fallback-Font für Emojis hinzu (oder im MetaFile):
 
 ```yaml
 mainfont: "Arial"
@@ -167,102 +238,98 @@ mainfontfallback:
     - "Segoe UI Emoji:mode=harf"
 ```
 
-**Display font list:**
+**Font-Liste anzeigen:**
 ```bash
 fc-list
 ```
 
-Direct:
+Direkt:
 ```bash
-pandoc build/test.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex 
-  -H makedocu/preamble.tex  -o build/test.pdf
+pandoc build_blocks/produkt_a_de.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex 
+  -H makedocu/preamble.tex  -o build_blocks/produkt_a_de.pdf
 ```
 
-With separate metadata file (2 examples):
+Mit separater Meta-Datei (2 Bsp.):
 ```bash
-pandoc build/produkt_a_de.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex --metadata-file=makedocu/commonpdf.yml -H makedocu/preamble.tex  -o build/produkt_a_de.pdf
+pandoc build_blocks/produkt_a_de.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex --metadata-file=makedocu/commonpdf.yml -H makedocu/preamble.tex  -o build_blocks/produkt_a_de.pdf
 ```
-
-```bash
-pandoc build/testtext_verziert_spoiler.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex --metadata-file=makedocu/commonpdf.yml -H makedocu/preamble.tex  -o build/testtext_verziert_spoiler.pdf
-```
-
-### 5️⃣ Generate HTML
-
-Create standalone HTML files with CSS styling:
 
 ```bash
-pandoc build/test.md -f gfm+alerts --css=flavoured.css --standalone  -o build/test.html
+pandoc build_blocks/testtext_verziert_spoiler.md -f gfm+alerts --lua-filter=makedocu/github-alerts.lua --pdf-engine=lualatex --metadata-file=makedocu/commonpdf.yml -H makedocu/preamble.tex  -o build_blocks/testtext_verziert_spoiler.pdf
 ```
 
-Optionally (also) copy images:
-```
-Copy-Item -Recurse -Force img build/
+### 5️⃣ HTML erzeugen (manuell mit Pandoc)
+
+Erstelle standalone HTML-Dateien mit CSS-Styling (*.lua-Filter ist nicht nötig!):
+
+```bash
+pandoc build_blocks/produkt_a_de.md -f gfm+alerts --css=flavoured.css --standalone -o build_blocks/produkt_a_de.html
 ```
 
+Optional (auch) Bilder dazu kopieren:
+```
+Copy-Item -Recurse -Force img build_blocks/
+```
 
 > [!TIP]
-> Copy the desired CSS file to `build/flavoured.css` before the first call!
-> In the `flavours_css/` directory, there are two CSS variants to choose from:
-> - **`flavoured_medium/flavoured.css`** – balanced, modern design (default)
-> - **`flavoured_light/flavoured.css`** – lightweight variant, good starting point for your own customizations
-> 
-> The CSS is already visually optimized for modern, responsive display on desktop and mobile.
-> `pandoc` itself offers few options for HTML. Therefore, the `.css` is well suited.
+> Kopiere die gewünschte CSS-Datei nach `build_blocks/flavoured.css` vor dem ersten Aufruf!
+> Im Verzeichnis `flavours_css/` gibt es zwei CSS-Varianten zur Auswahl:
+> - **`flavoured_medium/flavoured.css`** – ausgewogenes, modernes Design (Default)
+> - **`flavoured_light/flavoured.css`** – leichtgewichtige Variante, gut als Ausgangsbasis für eigene Anpassungen
 
 
-**Properties of HTML output:**
-- ✅ Fast conversion
-- ✅ Native alert support (no Lua filter needed)
-- ✅ Responsive design
+**Eigenschaften des HTML-Outputs:**
+- ✅ Schnelle Konvertierung
+- ✅ Native Alert-Unterstützung (kein Lua-Filter nötig)
+- ✅ Responsive Design
 
 ---
 
-## About 🎨 GitHub-Alerts
+## Über die 🎨 GitHub-Alerts
 
-**AUTODOC** supports GitHub Flavored Markdown with colored alert boxes:
+**AUTODOC** unterstützt GitHub Flavored Markdown mit farbigen Alert-Boxen:
 
 ```markdown
 > [!NOTE]
-> Informative notes in blue
+> Informative Hinweise in Blau
 
 > [!TIP]
-> Practical tips in green
+> Praktische Tipps in Grün
 
 > [!IMPORTANT]
-> Important information in purple
+> Wichtige Infos in Lila
 
 > [!WARNING]
-> Warnings in orange
+> Warnungen in Orange
 
 > [!CAUTION]
-> Critical notices in red
+> Kritische Hinweise in Rot
 ```
 
 ---
 
-## 📌 Useful Links
+## 📌 Nützliche Links
 
-- [Emoji List (Unicode)](https://github.com/Fantantonio/Emoji-List-Unicode)
-- [Pandoc Documentation](https://pandoc.org/)
+- [Emoji-Liste (Unicode)](https://github.com/Fantantonio/Emoji-List-Unicode)
+- [Pandoc Dokumentation](https://pandoc.org/)
 - [GitHub Alerts Syntax](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts)
-- [JoKnow on GitHub](https://github.com/joembedded/AiPlayground)
+- [JoKnow auf GitHub](https://github.com/joembedded/AiPlayground)
 
 ---
 
-## 💡 Tips
+## 💡 Tipps
 
-- **Fast workflow:** HTML for preview, PDF for final version
-- **Font problems:** `fc-list` shows available fonts
-- **Large documents:** PDF creation can take several seconds
-- **Embeddings:** MD files are perfect for AI assistants
+- **Schneller Workflow:** HTML für Vorschau, PDF für finale Version
+- **Font-Probleme:** `fc-list` zeigt verfügbare Schriften
+- **Große Dokumente:** PDF-Erstellung kann mehrere Sekunden dauern
+- **Embeddings:** MD-Dateien eignen sich perfekt für KI-Assistenten
 
 ---
 
 ## 🤝 Support
 
-For questions about GitHub-Alerts, Pandoc filters, HTML, or CSS:
-> Ask **Claude Sonnet** – he knows a lot about this! 🤖
+Bei Fragen zu GitHub-Alerts, Pandoc-Filtern, HTML oder CSS:
+> Frag **Claude Sonnet** – er kennt sich da sehr gut aus! 🤖
 
 ---
 
