@@ -114,7 +114,7 @@ php tools/mdtool.php build_blocks/produkt_a_de.md -i "Translate to English" > bu
 
 **'Verzierte' Version mit Spoiler:**
 ```bash
-php tools/mdtool.php docs_blocks/testtext.md build_blocks/testtext_verziert_spoiler.md -i "Füge am Anfang der Datei eine kurze Zusammenfassung als GitHub-Alert '> [!NOTE] >' ein, füge dann den Originaltext hintenan und verschöndere den gesamten Text mit Emojis"
+php tools/mdtool.php docs_blocks/testtext.md build_blocks/testtext_verziert_spoiler.md -i "Füge am Anfang der Datei eine kurze Zusammenfassung als GitHub-Alert '> [!NOTE] >' ein, füge dann den Originaltext hintenan und verschönere den gesamten Text mit Emojis"
 ```
 
 **Anderes Model verwenden:**
@@ -156,20 +156,20 @@ Für fertige Markdown-Dateien (z.B. Datenblätter, Handbücher) die **bereits vo
 
 ```
 docs_T350/
-  T350_manual.md      ← fertige Quelldatei
-  OSX_ad4to20mA.png   ← Bild(er) direkt daneben
-  Howto_T350.txt      ← kurze Anleitung
+  T350_handbuch.md      ← fertige Quelldatei
+  OSX_ad4to20mA.png     ← Bild(er) direkt daneben
+  Howto_T350.txt        ← kurze Anleitung
 ```
 
 Ein einziger Aufruf aus dem **Wurzelverzeichnis** erzeugt HTML und PDF im selben Verzeichnis:
 
 ```bash
-./makedocu/docrun docs_T350/T350_manual -h -p
+./makedocu/docrun docs_T350/T350_handbuch -h -p
 ```
 
 **Ergebnis** in `docs_T350/`:
-- `T350_manual.html` + `flavoured.css`
-- `T350_manual.pdf`
+- `T350_handbuch.html` + `flavoured.css`
+- `T350_handbuch.pdf`
 
 > [!TIP]
 > Dies ist der schnellste Weg für Datenblätter und Einzeldokumente: MD-Datei und Bilder in ein Verzeichnis legen, `docrun` aufrufen – fertig!
@@ -179,17 +179,17 @@ Ein einziger Aufruf aus dem **Wurzelverzeichnis** erzeugt HTML und PDF im selben
 Die fertige MD-Datei kann vor der Konvertierung optional per KI übersetzt werden. Demo DE→EN für `T350_handbuch.md`:
 
 ```bash
-php tools/mdtool.php docs_T350/T350_handbuch.md docs_T350/T350_handbuch_en.md -c tools/translate_de_en.txt
+php tools/mdtool.php docs_T350/T350_handbuch.md docs_T350/T350_manual.md -c tools/translate_de_en.txt
 ```
 
 Anschließend die übersetzte Datei genauso konvertieren:
 
 ```bash
-./makedocu/docrun docs_T350/T350_handbuch_en -h -p
+./makedocu/docrun docs_T350/T350_manual -h -p
 ```
 
 **Ergebnis** in `docs_T350/`:
-- `T350_handbuch_en.html` + `T350_handbuch_en.pdf`
+- `T350_manual_en.html` + `T350_manual_en.pdf`
 
 > [!NOTE]
 > Die Übersetzung benötigt einen OpenAI API-Key in `secret/keys.inc.php`. Die Bilder im selben Verzeichnis werden automatisch für beide Sprachversionen mitverwendet.
